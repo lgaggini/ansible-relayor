@@ -102,6 +102,11 @@ All variables mentioned here are optional.
         - instance 1: ORPort 9000, DirPort 9001
         - instance 2: ORPort 9100, DirPort 9101
 
+* `tor_offline_masterkey`
+    - default: yes
+    - Defines if enable the offline master key management by the role
+    - **note**: do not disable if you haven't a reason to do it: maybe you aren't willing and able to renew the temporary signing key regularly when it expires
+
 * `tor_offline_masterkey_dir`
     - default: ~/.tor/offlinemasterkeys
     - Defines the location where on the ansible control machine we store relay keys (Ed25519 and RSA)

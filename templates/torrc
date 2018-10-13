@@ -1,7 +1,9 @@
 # ansible-relayor generated torrc configuration file
 # Note: manual changes will be OVERWRITTEN on the next ansible-playbook run
 
+{% if tor_offline_masterkey %}
 OfflineMasterKey 1
+{% endif %}
 RunAsDaemon {{ tor_RunAsDaemon }}
 Log {{ tor_LogLevel }} syslog
 OutboundBindAddress {{ item.0.ipv4 }}

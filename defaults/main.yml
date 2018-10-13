@@ -63,6 +63,9 @@ tor_backup_torrc: yes
 # specify tor's loglevel
 tor_LogLevel: notice
 
+# enable/disable the tor offline masterkeys management
+tor_offline_masterkey: yes
+
 # Where do you want to store key material on the
 # ansible control machine?
 tor_offline_masterkey_dir: ~/.tor/offlinemasterkeys

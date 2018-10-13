@@ -19,6 +19,7 @@
   with_nested:
    - "{{ tor_ips }}"
    - "{{ tor_ports }}"
+  when: tor_offline_masterkey
   changed_when: False
 
 - name: Generate new Ed25519 signing keys (LOCAL)
@@ -29,6 +30,7 @@
    - "{{ tor_ports }}"
   tags:
    - renewkey
+  when: tor_offline_masterkey
   changed_when: False
 
 - name: Detect duplicate relay keys across relays (LOCAL)
@@ -37,12 +39,13 @@
   delegate_to: 127.0.0.1
   run_once: true
   register: tor_dupkeycount
+  when: tor_offline_masterkey
   changed_when: False
 
 - name: Abort on duplicate relay keys
   fail: msg="Duplicate relay key detected! Aborting."
   run_once: true
-  when: tor_dupkeycount.stdout|int(1) != 0
+  when: tor_offline_masterkey and tor_dupkeycount.stdout|int(1) != 0
 
 - name: Detect if Ed25519 master keys are on the relay
   become: yes
@@ -52,12 +55,13 @@
   with_nested:
    - "{{ tor_ips }}"
    - "{{ tor_ports }}"
+  when: tor_offline_masterkey
 
 - name: Abort if Ed25519 master keys are on the relay
   fail: msg="
 
             Ed25519 MASTER KEY detected on the relay - it is NOT supposed to be there! Aborting."
-  when: item.stat.exists == True
+  when: tor_offline_masterkey and item.stat.exists == True
   with_items: "{{ tor_masterkeyonline.results }}"
 
 # not relying on the datadir/fingerprint file is more robust
@@ -70,6 +74,7 @@
   tags:
    - reconfigure
   changed_when: False
+  when: tor_offline_masterkey
 
 - name: Ensure per-instance tor users exist
   become: yes
@@ -153,6 +158,7 @@
    - "{{ tor_ips }}"
    - "{{ tor_ports }}"
    - [ 'secret_id_key' ]
+  when: tor_offline_masterkey
 
 - name: Fetch RSA key for comparison
   become: yes
@@ -164,6 +170,7 @@
    - "{{ tor_ips }}"
    - "{{ tor_ports }}"
    - [ 'secret_id_key' ]
+  when: tor_offline_masterkey
 
 - name: Compare local vs. remote RSA key (secret_id_key)
   become: no
@@ -173,6 +180,7 @@
    - "{{ tor_ports }}"
   register: tor_rsakey_match
   changed_when: False
+  when: tor_offline_masterkey
 
 - name: Abort if local and remote RSA keys do not match
   assert:
@@ -180,6 +188,7 @@
       - "item.stdout|int == 1"
     msg: "Key mismatch detected! Solution: http://bit.ly/2j6wc70 Affected instance: {{ tor_offline_masterkey_dir }}/{{ inventory_hostname }}-{{ item.item.0.ipv4 }}_{{ item.item.1.orport }}/keys"
   with_items: "{{ tor_rsakey_match.results }}"
+  when: tor_offline_masterkey
 
 # this task is separated from the task named "Ensure RSA key is in place" because it is not run with 'force=no'
 - name: Transmit new Ed25519 signing keys
@@ -197,6 +206,7 @@
   changed_when: False
   tags:
    - renewkey
+  when: tor_offline_masterkey
 
 # This needs to be at the end to fix SELinux contexts recursively
 - name: Ensure per-instance DataDir have proper permissions
